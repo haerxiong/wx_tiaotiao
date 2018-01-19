@@ -7,6 +7,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by sunhua on 2018/1/18.
@@ -30,7 +32,7 @@ public class LocalMain {
             System.out.println(t+"------------------------------");
             captureScreen("C:\\Users\\sunhua\\Desktop\\books","11.png");
         }
-//        System.out.println(sameColor(new int[]{100,149,105}, new int[]{201,201,201}));
+//        System.out.println(sameColor(new int[]{170,180,234}, new int[]{206,209,250}, 40));
     }
 
 //    public static int[] rgb_shadow = {178,149,101};
@@ -38,6 +40,18 @@ public class LocalMain {
     public static int[] rgb_self = {54,60,102};
     public static int[] rgb_self2 = {88,80,128};
     public static int[] point_start = null;
+
+    public static Map<String, int[]> bs = new HashMap();
+
+    public static void getBot(BufferedImage image, int[] top, int[] rgb) throws Exception {
+        int[] t = getRGB(image, top[0], top[1]);
+        if(!bs.containsKey(top[0]+","+top[1]) && !sameColor(t, rgb)) {
+            bs.put(top[0]+","+top[1], top);
+            getBot(image, new int[]{top[0], top[1]+1}, rgb);
+            getBot(image, new int[]{top[0]-1, top[1]+1}, rgb);
+            getBot(image, new int[]{top[0]+1, top[1]+1}, rgb);
+        }
+    }
 
     public static void captureScreen(String fileName, String folder) throws Exception {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -52,32 +66,76 @@ public class LocalMain {
         for (int j = 200; j < image.getHeight(); j++) {
             for (int i = 10; i < image.getWidth(); i++) {
                 int[] t = getRGB(image, i, j);
-                int[] bg = getRGB(image, 10, 200);
-                if(target == null && !sameColor(bg, t)
-                    && !sameColor(t, rgb_self)
-                    && !sameColor(t, rgb_self2)) {// 从上找到target最上方点
-                    target = t;
-                    tarP = new int[]{i, j};
-                }
                 if(rgb_self[0] == t[0]
-                    && rgb_self[1] == t[1]
-                    && rgb_self[2] == t[2]) { // 找到小人的位置
+                        && rgb_self[1] == t[1]
+                        && rgb_self[2] == t[2]) { // 找到小人的位置
                     point_start = new int[]{i, j};
+                    break;
                 }
-                /*if(sameColor(t, rgb_self) && t[1]<80) {// 找到小人位置
-                    point_start = new int[]{i, j};
-                }*/
             }
         }
-        long t = (long) (distance(point_start, tarP)*6.75/2.5);
+        for (int j = 200; j < image.getHeight(); j++) {
+            for (int i = 10; i < image.getWidth(); i++) {
+                int[] t = getRGB(image, i, j);
+                int[] bg = getBgRGB(image);
+                if(target == null && !sameColor(bg, t)
+                    && !sameColor(t, rgb_self)
+                    && !sameColor(t, rgb_self2)
+                    && Math.abs(point_start[0] - i) > 25
+                    ) {// 从上找到target最上方点
+                    target = getRGB(image, i+2, j+2);
+                    tarP = new int[]{i + 2, j + 2};
+                    outAry(tarP);
+                    break;
+                }
+            }
+        }
+        int[] tarPL = null;
+        int[] tarPR = null;
+        for (int i = 10; i < image.getWidth(); i++) {
+            for (int j = 200; j < image.getHeight(); j++) {
+                int[] t = getRGB(image, i, j);
+                if(tarPL == null && target[0] == t[0]
+                        && target[1] == t[1]
+                        && target[2] == t[2]
+                        && j < point_start[1]
+                        && distance(tarP, new int[]{i, j}) < 100
+                        && Math.abs(point_start[0] - i) > 25
+                        ) {
+                    tarPL = new int[]{i, j};
+                }
+                if(target[0] == t[0]
+                        && target[1] == t[1]
+                        && target[2] == t[2]
+                        && j < point_start[1]
+                        && distance(tarP, new int[]{i, j}) < 100
+                        && Math.abs(point_start[0] - i) > 25
+                        ) {
+                    tarPR = new int[]{i, j};
+                    if(tarPR[0]-tarPL[0]<60) {
+                        tarPR[1] = tarPL[1];
+                    }
+                }
+            }
+        }
 
-        robot.mouseMove(point_start[0], point_start[1]);
+        int[] tar = new int[]{tarPL[0]/2+tarPR[0]/2, tarPL[1]/2+tarPR[1]/2};
+//        long t = (long) (distance(point_start, tarP)*6.75/2.5);
+        long t = (long) (distance(point_start, tar)*3);
+
+//        robot.mouseMove(point_start[0], point_start[1]);
+        robot.mouseMove(tarPL[0], tarPL[1]);
         Thread.sleep(500);
-        robot.mouseMove(tarP[0], tarP[1]);
+//        robot.mouseMove(tar[0], tar[1]);
+        robot.mouseMove(tarPR[0], tarPR[1]);
         Thread.sleep(500);
         System.out.println(t);
         push(t);
         Thread.sleep(2000);
+    }
+
+    private static int[] getBgRGB(BufferedImage image) {
+        return getRGB(image, 10, 200);
     }
 
     private static void outAry(int[] target) {
