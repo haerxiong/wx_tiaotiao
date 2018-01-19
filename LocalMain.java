@@ -10,9 +10,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by sunhua on 2018/1/18.
- */
 public class LocalMain {
 
     private static Robot robot;
@@ -29,7 +26,7 @@ public class LocalMain {
         int t = 0;
         while(true) {
             t++;
-            captureScreen("C:\\Users\\sunhua\\Desktop\\books","11.png");
+            captureScreen();
         }
     }
 
@@ -37,13 +34,13 @@ public class LocalMain {
     public static int[] rgb_self2 = {88,80,128};// 跳一跳小人的脚趾头
     public static int[] point_start = null;// 记录每次跳跃距离的起点，就是脚趾头
 
-    public static void captureScreen(String fileName, String folder) throws Exception {
+    public static void captureScreen() throws Exception {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         Rectangle screenRectangle = new Rectangle(screenSize);
         Robot robot = new Robot();
         screenRectangle.setBounds(0, 0, 450, 800);// 截图大小
         BufferedImage image = robot.createScreenCapture(screenRectangle);
-//        saveAndOpen(fileName, folder, image);
+//        saveAndOpen("C:\\Users\\sunhua\\Desktop\\books","11.png", image);
 
         int[] target = null;
         int[] tarP = null;
@@ -72,7 +69,6 @@ public class LocalMain {
                     ) {// 从上找到target最上方点
                     target = getRGB(image, i+2, j+2);
                     tarP = new int[]{i + 2, j + 2};
-                    outAry(tarP);
                     break;
                 }
             }
@@ -90,6 +86,10 @@ public class LocalMain {
                         && j < point_start[1]
                         && distance(tarP, new int[]{i, j}) < 100
                         && Math.abs(point_start[0] - i) > 25
+
+                       /* // 距离很近的时候
+                        && ((distance(tarP, new int[]{i, j}) < 50 && distance(tarP, new int[]{i, j})<distance(point_start, new int[]{i, j}) ))
+                            || ((distance(tarP, new int[]{i, j}) > 50))*/
                         ) {
                     tarPL = new int[]{i, j};
                 }
@@ -101,8 +101,14 @@ public class LocalMain {
                         && Math.abs(point_start[0] - i) > 25
                         ) {
                     tarPR = new int[]{i, j};
-                    if(tarPR[0]-tarPL[0]<60) {
+                    if(tarPR[0]-tarPL[0]<60) {// 小药瓶有点无解，特殊处理下
                         tarPR[1] = tarPL[1];
+                    }
+                    int[] t1 = getRGB(image, i, j-1);
+                    int[] t2 = getRGB(image, i, j+1);
+                    if(target[0] == t1[0] || target[1] == t1[1] || target[2] == t1[2]
+                            || target[0] == t2[0] || target[1] == t2[1] || target[2] == t2[2]) {// 上下点颜色都不同，就算结束了
+                        break;
                     }
                 }
             }
