@@ -8,10 +8,6 @@
 
 人工感知调试，按压时长和距离的比例，大概：毫秒数=3*距离像素数
 
-
-
-
-
-
-
 乐一乐~
+
+![image](https://github.com/haerxiong/wx_tiaotiao/blob/master/demo.gif)
