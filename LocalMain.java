@@ -29,51 +29,38 @@ public class LocalMain {
         int t = 0;
         while(true) {
             t++;
-            System.out.println(t+"------------------------------");
             captureScreen("C:\\Users\\sunhua\\Desktop\\books","11.png");
         }
-//        System.out.println(sameColor(new int[]{170,180,234}, new int[]{206,209,250}, 40));
     }
 
-//    public static int[] rgb_shadow = {178,149,101};
-//    public static int[] rgb_self = {55,59,100};
-    public static int[] rgb_self = {54,60,102};
-    public static int[] rgb_self2 = {88,80,128};
-    public static int[] point_start = null;
-
-    public static Map<String, int[]> bs = new HashMap();
-
-    public static void getBot(BufferedImage image, int[] top, int[] rgb) throws Exception {
-        int[] t = getRGB(image, top[0], top[1]);
-        if(!bs.containsKey(top[0]+","+top[1]) && !sameColor(t, rgb)) {
-            bs.put(top[0]+","+top[1], top);
-            getBot(image, new int[]{top[0], top[1]+1}, rgb);
-            getBot(image, new int[]{top[0]-1, top[1]+1}, rgb);
-            getBot(image, new int[]{top[0]+1, top[1]+1}, rgb);
-        }
-    }
+    public static int[] rgb_self = {54,60,102};// 跳一跳小人头上的一个点
+    public static int[] rgb_self2 = {88,80,128};// 跳一跳小人的脚趾头
+    public static int[] point_start = null;// 记录每次跳跃距离的起点，就是脚趾头
 
     public static void captureScreen(String fileName, String folder) throws Exception {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         Rectangle screenRectangle = new Rectangle(screenSize);
         Robot robot = new Robot();
-        screenRectangle.setBounds(0, 0, 450, 800);
+        screenRectangle.setBounds(0, 0, 450, 800);// 截图大小
         BufferedImage image = robot.createScreenCapture(screenRectangle);
 //        saveAndOpen(fileName, folder, image);
 
         int[] target = null;
         int[] tarP = null;
+        // 1、第一次循环，先找脚趾头
         for (int j = 200; j < image.getHeight(); j++) {
             for (int i = 10; i < image.getWidth(); i++) {
                 int[] t = getRGB(image, i, j);
                 if(rgb_self[0] == t[0]
                         && rgb_self[1] == t[1]
-                        && rgb_self[2] == t[2]) { // 找到小人的位置
+                        && rgb_self[2] == t[2]) {
                     point_start = new int[]{i, j};
                     break;
                 }
             }
         }
+
+        // 2、第二次循环，找目标台子的顶点
         for (int j = 200; j < image.getHeight(); j++) {
             for (int i = 10; i < image.getWidth(); i++) {
                 int[] t = getRGB(image, i, j);
@@ -90,8 +77,10 @@ public class LocalMain {
                 }
             }
         }
+
         int[] tarPL = null;
         int[] tarPR = null;
+        // 3、第三次循环，找目标台子的两侧的点
         for (int i = 10; i < image.getWidth(); i++) {
             for (int j = 200; j < image.getHeight(); j++) {
                 int[] t = getRGB(image, i, j);
@@ -119,17 +108,17 @@ public class LocalMain {
             }
         }
 
+        // 4、通过目标台子两侧的点计算中心点，距离换算为按压屏幕的毫秒数
         int[] tar = new int[]{tarPL[0]/2+tarPR[0]/2, tarPL[1]/2+tarPR[1]/2};
-//        long t = (long) (distance(point_start, tarP)*6.75/2.5);
         long t = (long) (distance(point_start, tar)*3);
 
-//        robot.mouseMove(point_start[0], point_start[1]);
+        // 指示鼠标位置，方便调试的
         robot.mouseMove(tarPL[0], tarPL[1]);
         Thread.sleep(500);
-//        robot.mouseMove(tar[0], tar[1]);
         robot.mouseMove(tarPR[0], tarPR[1]);
         Thread.sleep(500);
-        System.out.println(t);
+
+        // 5、跳吧
         push(t);
         Thread.sleep(2000);
     }
@@ -173,6 +162,9 @@ public class LocalMain {
         return Math.sqrt(absR*absR+absG*absG);
     }
 
+    /**
+    *  保存截图
+    */
     private static void saveAndOpen(String fileName, String folder, BufferedImage image) throws IOException {
         //保存路径
         File screenFile = new File(fileName);
