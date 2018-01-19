@@ -9,6 +9,6 @@
 +
 欧式空间颜色识别算法
 \=
-菜鸟机器人
+1000分菜鸟机器人
 
 ![image](https://github.com/haerxiong/wx_tiaotiao/blob/master/demo.gif)
